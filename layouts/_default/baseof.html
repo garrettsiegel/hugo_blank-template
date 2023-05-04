@@ -29,14 +29,39 @@
     {{ end }}
 
 
-
-    <link rel="stylesheet" href="/css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- <link rel="stylesheet" href="/css/main.css"> -->
+    {{ if .Site.IsServer }}
+      {{ $cssOpts := (dict "targetPath" "styles/main.css" "enableSourceMap" true ) }}
+      {{ $styles := resources.Get "css/main.sass" | toCSS $cssOpts }}
+      <link rel="stylesheet" href="{{ $styles.Permalink }}" media="screen">
+    {{ else }}
+      {{ $cssOpts := (dict "targetPath" "styles/main.css" ) }}
+      {{ $styles := resources.Get "css/main.sass" | toCSS $cssOpts | postCSS | minify }}
+      <link rel="stylesheet" href="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}" media="screen">
+    {{ end }}
+   
   </head>
   <body>
+    <!-- {{ partial "footer.html" . }} -->
+
     {{ partial "navbar.html" . }}
+    {{ partial "styleguide.html" .}}
     {{ block "main" . }}
       <!-- The part of the page that begins to differ between templates -->
     {{ end }}
-    {{ partial "footer.html" . }}
+    <!-- <footer> -->
+      <p>
+        Copyright &copy; {{ now.Format "2006" }} {{ $.Site.Title }} | All rights reserved.
+      </p>
+    <!-- </footer> -->
+    
+    
+    {{ $js := resources.Get "js/app.js" | babel | js.Build "main.js" | resources.Minify }}
+    <script src="{{ $js.Permalink }}"></script>
+   
   </body>
+
 </html>
